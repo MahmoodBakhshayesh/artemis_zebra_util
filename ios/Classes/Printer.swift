@@ -75,7 +75,8 @@ class Printer{
 //                "address": d.serialNumber,
 //                "type": 1
 //            ]
-            let data = DeviceData(name: d.name, address: d.serialNumber, type: 1)
+
+            let data = DeviceData(name: d.name, address: d.serialNumber, type: 1,isConnected: d.isConnected)
 
             let jsonEncoder = JSONEncoder()
             let jsonData = try! jsonEncoder.encode(data)
@@ -237,4 +238,5 @@ struct DeviceData: Codable {
     var name: String?
     var address: String?
     var type: Int?
+    var isConnected: Bool
 }

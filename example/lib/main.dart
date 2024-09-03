@@ -54,7 +54,10 @@ class _MyAppState extends State<MyApp> {
       home: Scaffold(
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
-            ZebraPrinter p = await ArtemisZebraUtil.getPrinterInstance(label: "BP TEST", notifier: (p) => setState(() {}));
+            ZebraPrinter p = await ArtemisZebraUtil.getPrinterInstance(label: "BP TEST", notifier: (p) {
+              print("Notifier called ${p.status.name}");
+              setState(() {});
+            });
             printers.add(p);
             setState(() {});
             // ArtemisZebraUtil().getPlatformVersion().then((value){
@@ -105,7 +108,12 @@ class _MyAppState extends State<MyApp> {
                                   // e.connectToPrinter("192.168.1.8");
                                   // print(e.foundPrinters.map((e) => e.address));
                                   // e.disconnectPrinter();
-                                  e.connectToPrinter(e.foundPrinters.first.address);
+                                  if(e.status == PrinterStatus.disconnected){
+                                    e.connectToPrinter(e.foundPrinters.first.address);
+                                  }else{
+                                    e.disconnectPrinter();
+                                  }
+
                                 },
                                 child: const Text("Connect"),
                               ),

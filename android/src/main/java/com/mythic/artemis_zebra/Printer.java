@@ -198,6 +198,7 @@ public class Printer implements MethodChannel.MethodCallHandler {
                         arguments.put("address", address);
                         arguments.put("name", name);
                         arguments.put("type", 1);
+                        arguments.put("isConnected", discoveredPrinter.getConnection().isConnected());
                         methodChannel.invokeMethod("printerFound", new Gson().toJson(arguments));
                     });
                 }
@@ -262,6 +263,8 @@ public class Printer implements MethodChannel.MethodCallHandler {
                         arguments.put("address", discoveredPrinter.address);
                         arguments.put("name", discoveredPrinter.getDiscoveryDataMap().get("SYSTEM_NAME"));
                         arguments.put("type", 0);
+                        arguments.put("isConnected", discoveredPrinter.getConnection().isConnected());
+//                        arguments.put("isConnected", discoveredPrinter);
                         methodChannel.invokeMethod("printerFound", new Gson().toJson(arguments));
                     });
                 }

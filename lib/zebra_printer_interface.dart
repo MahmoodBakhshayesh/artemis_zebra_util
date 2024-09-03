@@ -110,12 +110,14 @@ class FoundPrinter {
   final String name;
   final String address;
   final PrinterType type;
+  final bool isConnected;
 
-  FoundPrinter({required this.name, required this.address, required this.type});
+  FoundPrinter({required this.name, required this.address, required this.type,required this.isConnected});
 
   factory FoundPrinter.fromJson(json)=>
       FoundPrinter(name: json["name"]??"Unknown",
         address: json["address"],
+        isConnected: json["isConnected"]??false,
         type: PrinterType.values.firstWhere((element) => element.id == json["type"]),);
 
   @override

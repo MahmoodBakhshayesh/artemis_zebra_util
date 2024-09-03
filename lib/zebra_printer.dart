@@ -35,11 +35,14 @@ class ZebraPrinter implements ArtemisZebraPrinterInterface {
   discoverPrinters() async {
     bool permissions = await checkPermissions();
     if (permissions) {
-      status = PrinterStatus.discoveringPrinter;
-      notifier(this);
+      if(status != PrinterStatus.ready){
+        status = PrinterStatus.discoveringPrinter;
+        notifier(this);
+      }
+
       String result = await channel.invokeMethod("discoverPrinters");
-      status = PrinterStatus.disconnected;
-      notifier(this);
+      // status = PrinterStatus.disconnected;
+      // notifier(this);
       return result;
     }else{
       return "No Permission";
@@ -52,13 +55,17 @@ class ZebraPrinter implements ArtemisZebraPrinterInterface {
     notifier(this);
     final bool result = await channel.invokeMethod("connectToPrinter", {"address": address});
     if (result) {
+      print("result is true");
       status = PrinterStatus.ready;
       log("Zebra Instance $instanceID Connected to $address");
+      notifier(this);
+      return result;
     } else {
+      print("result is false");
       status = PrinterStatus.disconnected;
+      notifier(this);
+      return result;
     }
-    notifier(this);
-    return result;
   }
 
   @override
