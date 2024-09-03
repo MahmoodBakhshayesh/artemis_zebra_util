@@ -1,6 +1,8 @@
+package com.mythic.artemis_zebra;//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by Fernflower decompiler)
+//
 
-
-package com.mythic.artemis_zebra;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothClass;
@@ -10,6 +12,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
+
 import com.zebra.sdk.comm.ConnectionException;
 import com.zebra.sdk.comm.internal.BluetoothHelper;
 import com.zebra.sdk.comm.internal.BtServiceDiscoverer;
@@ -22,11 +26,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class BluetoothDiscoverer {
-    private final Context mContext;
-    private final DiscoveryHandler mDiscoveryHandler;
-    BtReceiver btReceiver;
-    BtRadioMonitor btMonitor;
-    private final DeviceFilter deviceFilter;
+    private Context mContext;
+    private DiscoveryHandler mDiscoveryHandler;
+    BluetoothDiscoverer.BtReceiver btReceiver;
+    BluetoothDiscoverer.BtRadioMonitor btMonitor;
+    private DeviceFilter deviceFilter;
 
     private BluetoothDiscoverer(Context var1, DiscoveryHandler var2, DeviceFilter var3) {
         this.mContext = var1;
@@ -34,9 +38,11 @@ public class BluetoothDiscoverer {
         this.mDiscoveryHandler = var2;
     }
 
-    public static void findPrinters(Context var0, DiscoveryHandler var1, DeviceFilter var2) {
+    public static void findPrinters(Context var0, DiscoveryHandler var1, DeviceFilter var2) throws ConnectionException {
+
         BluetoothAdapter var3 = BluetoothAdapter.getDefaultAdapter();
         if (var3 == null) {
+
             var1.discoveryError("No bluetooth radio found");
         } else if (!var3.isEnabled()) {
             var1.discoveryError("Bluetooth radio is currently disabled");
@@ -44,13 +50,12 @@ public class BluetoothDiscoverer {
             if (var3.isDiscovering()) {
                 var3.cancelDiscovery();
             }
-
             (new BluetoothDiscoverer(var0.getApplicationContext(), var1, var2)).doBluetoothDisco();
         }
 
     }
 
-    public static void findPrinters(Context var0, DiscoveryHandler var1) {
+    public static void findPrinters(Context var0, DiscoveryHandler var1) throws ConnectionException {
         DeviceFilter var2 = new DeviceFilter() {
             public boolean shouldAddPrinter(BluetoothDevice var1) {
                 return true;
@@ -60,6 +65,7 @@ public class BluetoothDiscoverer {
     }
 
     public static void findServices(Context var0, String var1, ServiceDiscoveryHandler var2) {
+
         BtServiceDiscoverer var3 = new BtServiceDiscoverer(BluetoothHelper.formatMacAddress(var1), var2);
         var3.doDiscovery(var0);
     }
@@ -76,8 +82,8 @@ public class BluetoothDiscoverer {
     }
 
     private void doBluetoothDisco() {
-        this.btReceiver = new BtReceiver();
-        this.btMonitor = new BtRadioMonitor();
+        this.btReceiver = new BluetoothDiscoverer.BtReceiver();
+        this.btMonitor = new BluetoothDiscoverer.BtRadioMonitor();
         IntentFilter var1 = new IntentFilter("android.bluetooth.device.action.FOUND");
         IntentFilter var2 = new IntentFilter("android.bluetooth.adapter.action.DISCOVERY_FINISHED");
         IntentFilter var3 = new IntentFilter("android.bluetooth.adapter.action.STATE_CHANGED");

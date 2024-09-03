@@ -16,6 +16,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Looper;
 import android.util.Base64;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -27,6 +28,7 @@ import com.zebra.sdk.comm.TcpConnection;
 import com.zebra.sdk.printer.ZebraPrinter;
 import com.zebra.sdk.printer.ZebraPrinterFactory;
 import com.zebra.sdk.printer.ZebraPrinterLanguageUnknownException;
+import com.zebra.sdk.printer.discovery.BluetoothDiscoverer;
 import com.zebra.sdk.printer.discovery.DiscoveredPrinter;
 import com.zebra.sdk.printer.discovery.DiscoveryHandler;
 import com.zebra.sdk.printer.discovery.NetworkDiscoverer;
@@ -81,7 +83,7 @@ public class Printer implements MethodChannel.MethodCallHandler {
                 break;
 
             case "discoverPrinters":
-                discoverPrinters(result);
+                discoverPrinters(context,result);
                 break;
 
             case "connectToPrinter":
@@ -162,28 +164,52 @@ public class Printer implements MethodChannel.MethodCallHandler {
 //        }
     }
 
-    public void discoverPrinters(final MethodChannel.Result result) {
-
+    public void discoverPrinters(final Context context, final MethodChannel.Result result) {
         try {
-            BluetoothDiscoverer.findPrinters(context, new DiscoveryHandler() {
+//            BluetoothDiscoverer.findPrinters(context,
+//                @Override
+//                public void foundPrinter(final DiscoveredPrinter discoveredPrinter) {
+//                    Log.println(Log.ASSERT,"Printer Found!!!","Printer Found");
+////                    discoveredPrinters.add(discoveredPrinter);
+//                    ((Activity) context).runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//
+//                            Log.println(Log.ASSERT,"Printer Found!!!","Printer Found");
+//
+//                        }
+//                    });
+//                }
+//                @Override
+//
+//
+//            );
+
+            BluetoothDiscoverer.findPrinters(this.context, new DiscoveryHandler() {
                 @Override
                 public void foundPrinter(final DiscoveredPrinter discoveredPrinter) {
-                    discoveredPrinters.add(discoveredPrinter);
-                    ((Activity) context).runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            HashMap<String, Object> arguments = new HashMap<>();
-                            arguments.put("address", discoveredPrinter.address);
-                            arguments.put("name", discoveredPrinter.getDiscoveryDataMap().get("FRIENDLY_NAME"));
-                            arguments.put("type", 1);
-                            methodChannel.invokeMethod("printerFound", new Gson().toJson(arguments));
-                        }
+                    Log.println(Log.ASSERT,"Printer Found!!!","Printer Found  &&&&");
+                    ((Activity) context).runOnUiThread(() -> {
+
+                        Log.println(Log.ASSERT,"Printer Found!!!","Printer Found ****");
+                        String address = discoveredPrinter.address;
+                        String name = discoveredPrinter.getDiscoveryDataMap().get("FRIENDLY_NAME");
+                        HashMap<String, Object> arguments = new HashMap<>();
+                        arguments.put("address", address);
+                        arguments.put("name", name);
+                        arguments.put("type", 1);
+                        methodChannel.invokeMethod("printerFound", new Gson().toJson(arguments));
                     });
                 }
 
                 @Override
                 public void discoveryFinished() {
-                    result.success("DiscoveryDone");
+                    countEndScan++;
+                    Log.println(Log.ASSERT,"Bluetooth Discovery","Discovery Finish");
+                    if(countEndScan==2){
+                        countEndScan = 0;
+                        result.success("DiscoveryDone");
+                    }
                 }
 
                 @Override
@@ -195,24 +221,59 @@ public class Printer implements MethodChannel.MethodCallHandler {
             });
 
 
+//            BluetoothDiscoverer.findPrinters(context, new DiscoveryHandler() {
+//                @Override
+//                public void foundPrinter(final DiscoveredPrinter discoveredPrinter) {
+////                    discoveredPrinters.add(discoveredPrinter);
+//                    ((Activity) context).runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            Log.println(Log.ASSERT,"Printer Found!!!","Printer Found");
+//                            HashMap<String, Object> arguments = new HashMap<>();
+//                            arguments.put("address", discoveredPrinter.address);
+//                            arguments.put("name", discoveredPrinter.getDiscoveryDataMap().get("FRIENDLY_NAME"));
+//                            arguments.put("type", 1);
+//                            methodChannel.invokeMethod("printerFound", new Gson().toJson(arguments));
+//                        }
+//                    });
+//                }
+//
+//                @Override
+//                public void discoveryFinished() {
+//                    result.success("DiscoveryDone");
+//                }
+//
+//                @Override
+//                public void discoveryError(String s) {
+//                    Log.println(Log.ASSERT,"P","FindPrintersError!!!!!"+s);
+//
+//                    HashMap<String, Object> arguments = new HashMap<>();
+//                    arguments.put("error", s);
+//                    methodChannel.invokeMethod("discoveryError", arguments);
+//                }
+//            });
+
+//            BluetoothDiscoverer.findPrinters();
             NetworkDiscoverer.findPrinters(new DiscoveryHandler() {
                 @Override
                 public void foundPrinter(DiscoveredPrinter discoveredPrinter) {
-                    ((Activity) context).runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            HashMap<String, Object> arguments = new HashMap<>();
-                            arguments.put("address", discoveredPrinter.address);
-                            arguments.put("name", discoveredPrinter.getDiscoveryDataMap().get("SYSTEM_NAME"));
-                            arguments.put("type", 0);
-                            methodChannel.invokeMethod("printerFound", new Gson().toJson(arguments));
-                        }
+                    ((Activity) context).runOnUiThread(() -> {
+                        HashMap<String, Object> arguments = new HashMap<>();
+                        arguments.put("address", discoveredPrinter.address);
+                        arguments.put("name", discoveredPrinter.getDiscoveryDataMap().get("SYSTEM_NAME"));
+                        arguments.put("type", 0);
+                        methodChannel.invokeMethod("printerFound", new Gson().toJson(arguments));
                     });
                 }
 
                 @Override
                 public void discoveryFinished() {
-                    result.success("DiscoveryDone");
+                    countEndScan++;
+                    Log.println(Log.ASSERT,"Network Discovery","Discovery Finish");
+                    if(countEndScan==2){
+                        result.success("DiscoveryDone");
+                    }
+//
                 }
 
                 @Override
@@ -224,6 +285,8 @@ public class Printer implements MethodChannel.MethodCallHandler {
             });
         } catch (Exception e) {
             e.printStackTrace();
+            Log.println(Log.ASSERT,"P",e.toString());
+
         }
     }
 
@@ -355,15 +418,6 @@ public class Printer implements MethodChannel.MethodCallHandler {
 
     private void checkPermissions(final MethodChannel.Result result) {
         List<String> listPermissionsNeeded = new ArrayList<>();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                listPermissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
-            }
-            if (context.checkSelfPermission(Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
-                listPermissionsNeeded.add(Manifest.permission.BLUETOOTH);
-            }
-
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
                 listPermissionsNeeded.add(Manifest.permission.BLUETOOTH_SCAN);
@@ -374,9 +428,62 @@ public class Printer implements MethodChannel.MethodCallHandler {
             if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_ADVERTISE) != PackageManager.PERMISSION_GRANTED) {
                 listPermissionsNeeded.add(Manifest.permission.BLUETOOTH_ADVERTISE);
             }
+            if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_PRIVILEGED) != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(Manifest.permission.BLUETOOTH_PRIVILEGED);
+            }
+            if (context.checkSelfPermission(Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(Manifest.permission.BLUETOOTH);
+            }
+            if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_ADMIN) != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(Manifest.permission.BLUETOOTH_ADMIN);
+            }
+            if (!listPermissionsNeeded.isEmpty()) {
+                binding.addRequestPermissionsResultListener(new PluginRegistry.RequestPermissionsResultListener() {
+                    @Override
+                    public boolean onRequestPermissionsResult(int requestCode, String[] listPermissionsNeeded, int[] grantResults) {
+//                        if (requestCode == ACCESS_COARSE_LOCATION_REQUEST_CODE) {
+                        if (grantResults.length > 0)
+                            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                                try {
+                                    result.success(true);
+                                    return true;
+                                } catch (Exception e) {
+                                    result.success(false);
+                                    return false;
+                                }
+                            }
+//                        }
+                        try {
+                            result.success(false);
+                            return false;
+                        } catch (Exception e) {
+                            result.success(false);
+                            return false;
+                        }
+                    }
+                });
+                ((Activity) context).requestPermissions(listPermissionsNeeded.toArray(new String[0]), ACCESS_COARSE_LOCATION_REQUEST_CODE);
+            } else {
+                result.success(true);
+            }
 
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        }else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+            }
+            if (context.checkSelfPermission(Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(Manifest.permission.BLUETOOTH);
+            }
+//            if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+//                listPermissionsNeeded.add(Manifest.permission.BLUETOOTH_SCAN);
+//            }
+            if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_PRIVILEGED) != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(Manifest.permission.BLUETOOTH_PRIVILEGED);
+            }
+//            if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_ADVERTISE) != PackageManager.PERMISSION_GRANTED) {
+//                listPermissionsNeeded.add(Manifest.permission.BLUETOOTH_ADVERTISE);
+//            }
+
             if (!listPermissionsNeeded.isEmpty()) {
                 binding.addRequestPermissionsResultListener(new PluginRegistry.RequestPermissionsResultListener() {
                     @Override
@@ -407,6 +514,10 @@ public class Printer implements MethodChannel.MethodCallHandler {
                 result.success(true);
             }
         }
+//
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//
+//        }
 
 
     }

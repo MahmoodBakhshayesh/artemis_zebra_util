@@ -14,8 +14,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral
 
 SPEC CHECKSUMS:
-  artemis_zebra: 5a72b038cd4f5abce64e88f73f704d3abc3d508a
-  FlutterMacOS: 57701585bf7de1b3fc2bb61f6378d73bbdea8424
+  artemis_zebra: 39a80d8c06ed52d0f1e3a33dc6968657bd24838b
+  FlutterMacOS: ae6af50a8ea7d6103d888583d46bd8328a7e9811
 
 PODFILE CHECKSUM: 6eac6b3292e5142cfc23bdeb71848a40ec51c14c
 

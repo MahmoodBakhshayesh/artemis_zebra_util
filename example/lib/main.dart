@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+// import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,9 +36,8 @@ class _MyAppState extends State<MyApp> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     // We also handle the message potentially returning null.
     try {
-      printer = await ArtemisZebraUtil.getPrinterInstance(notifier: (_) => setState(() {
-        print("aa");
-      }));
+      printer = await ArtemisZebraUtil.getPrinterInstance(
+          notifier: (_) => setState(() {}));
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }
@@ -54,7 +54,7 @@ class _MyAppState extends State<MyApp> {
       home: Scaffold(
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
-            ZebraPrinter p = await ArtemisZebraUtil.getPrinterInstance(label: "BP TEST", notifier: (p) =>setState((){}));
+            ZebraPrinter p = await ArtemisZebraUtil.getPrinterInstance(label: "BP TEST", notifier: (p) => setState(() {}));
             printers.add(p);
             setState(() {});
             // ArtemisZebraUtil().getPlatformVersion().then((value){
@@ -67,42 +67,53 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Column(
           children: [
+            TextButton(
+                onPressed: () {
+                  // getPermissions();
+                },
+                child: const Text("Get Permissions")),
             ...printers
-                .map((e) => ListTile(
-                      onTap: (){
-                        e.isPrinterConnected();
-                      },
-                      onLongPress: (){
-                        e.disconnectPrinter();
-                      },
-                      leading: Icon(
-                        Icons.print,
-                        color: e.status.color,
-                      ),
-                      subtitle: Text("${e.instanceID} :${e.status.label}"),
-                      // trailing: Text(""),
-                      title: Row(
-                        children: [
-                          TextButton(
-                            onPressed: () {
-                              print("sda");
-                              e.discoverPrinters().then((value){
-                                print(value);
-                              });
-                            },
-                            child: const Text("Find"),
+                .map((e) => Column(
+                      children: [
+                        ListTile(
+                          onTap: () {
+                            e.isPrinterConnected();
+                          },
+                          onLongPress: () {
+                            e.disconnectPrinter();
+                          },
+                          leading: Icon(
+                            Icons.print,
+                            color: e.status.color,
                           ),
-                          TextButton(
-                            onPressed: () {
-                              // print(e.foundPrinters.first.address);
-                              e.connectToPrinter("192.168.1.8");
-                            },
-                            child: const Text("Connect"),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              e.printData('''
-                ^XA
+                          subtitle: Text("${e.instanceID} :${e.status.label}"),
+                          // trailing: Text(""),
+                          title: Row(
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  // print("sda");
+                                  e.discoverPrinters().then((value) {
+                                    print(value);
+                                  });
+                                },
+                                child: const Text("Find"),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  // print(e.foundPrinters.first.address);
+                                  // e.connectToPrinter("192.168.1.8");
+                                  // print(e.foundPrinters.map((e) => e.address));
+                                  // e.disconnectPrinter();
+                                  e.connectToPrinter(e.foundPrinters.first.address);
+                                },
+                                child: const Text("Connect"),
+                              ),
+
+                              TextButton(
+                                onPressed: () {
+                                  e.printData('''
+                    ^XA
 
 ^FX Top section with logo, name and address.
 ^CF0,60
@@ -143,12 +154,50 @@ class _MyAppState extends State<MyApp> {
 ^FO470,955^FDCA^FS
 
 ^XZ
-                ''');
-                            },
-                            child: const Text("Print"),
+                    ''');
+                                },
+                                child: const Text("Print"),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        Row(children: [
+                          TextButton(
+                            onPressed: () async {
+                              await e.setSettings(Command.mediaType, MediaType.label);
+
+                              // await e.setSettings(Command.mediaType, MediaType.journal);
+                              // await e.setSettings(Command.mediaType, MediaType.label);
+                              // await e.setSettings(Command.mediaType, MediaType.journal);
+                            },
+                            child: const Text("Label"),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              await e.setSettings(Command.mediaType, MediaType.journal);
+
+                              // await e.setSettings(Command.mediaType, MediaType.journal);
+                              // await e.setSettings(Command.mediaType, MediaType.label);
+                              // await e.setSettings(Command.mediaType, MediaType.journal);
+                            },
+                            child: const Text("Journal"),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              await e.setSettings(Command.mediaType, MediaType.blackMark);
+
+                              // await e.setSettings(Command.mediaType, MediaType.journal);
+                              // await e.setSettings(Command.mediaType, MediaType.label);
+                              // await e.setSettings(Command.mediaType, MediaType.journal);
+                            },
+                            child: const Text("Black"),
+                          ),
+
+                        ],),
+                        Row(
+                          children: e.foundPrinters.map((e) => Text("${e.name} ${e.address}")).toList(),
+                        )
+                      ],
                     ))
                 .toList()
           ],
@@ -156,4 +205,6 @@ class _MyAppState extends State<MyApp> {
       ),
     );
   }
+
+
 }

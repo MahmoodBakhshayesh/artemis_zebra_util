@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'artemis_zebra_platform_interface.dart';
 import 'zebra_printer.dart';
-
 
 /// An implementation of [ArtemisZebraUtilPlatform] that uses method channels.
 class MethodChannelArtemisZebraUtil extends ArtemisZebraUtilPlatform {
@@ -12,7 +12,7 @@ class MethodChannelArtemisZebraUtil extends ArtemisZebraUtilPlatform {
   final methodChannel = const MethodChannel('artemis_zebra');
 
   @override
-  Future<void> setMethodCallHandler({required Future<dynamic> Function(MethodCall call)? handler}) async{
+  Future<void> setMethodCallHandler({required Future<dynamic> Function(MethodCall call)? handler}) async {
     methodChannel.setMethodCallHandler(handler);
     // final result = await methodChannel.invokeMethod<String>('discoverPrinters');
     // return result;
@@ -26,18 +26,37 @@ class MethodChannelArtemisZebraUtil extends ArtemisZebraUtilPlatform {
 
   @override
   Future<String?> discoverPrinters() async {
+
     final result = await methodChannel.invokeMethod<String>('discoverPrinters');
     return result;
   }
 
-
-
   @override
-  Future<ZebraPrinter> getZebraPrinterInstance({String? label,required void Function(ZebraPrinter) notifier}) async{
+  Future<ZebraPrinter> getZebraPrinterInstance({String? label, required void Function(ZebraPrinter) notifier}) async {
+    getPermissions();
     String id = await methodChannel.invokeMethod("getInstance");
-    ZebraPrinter printer = ZebraPrinter(id,label:label,notifierFunction: notifier);
+    ZebraPrinter printer = ZebraPrinter(id, label: label, notifierFunction: notifier);
     return printer;
   }
 
-
+  Future<void> getPermissions() async {
+    // You can request multiple permissions at once.
+    // if (await Permission.location.isGranted &&
+    //     await Permission.bluetooth.isGranted &&
+    //     Permission.bluetoothAdvertise.isGranted &&
+    //     Permission.bluetoothConnect.isGranted &&
+    //     Permission.bluetoothScan.isGranted) return;
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.location,
+      Permission.bluetooth,
+      Permission.bluetoothAdvertise,
+      Permission.bluetoothConnect,
+      Permission.bluetoothScan,
+    ].request();
+    // print(statuses[Permission.location]);
+    // print(statuses[Permission.bluetooth]);
+    // print(statuses[Permission.bluetoothAdvertise]);
+    // print(statuses[Permission.bluetoothConnect]);
+    // print(statuses[Permission.bluetoothScan]);
+  }
 }

@@ -25,6 +25,7 @@ class ZebraPrinter implements ArtemisZebraPrinterInterface {
 
   @override
   checkPermissions() async {
+    return true;
     if(Platform.isIOS) return true;
     bool result = await channel.invokeMethod("checkPermissions");
     return result;
@@ -33,7 +34,7 @@ class ZebraPrinter implements ArtemisZebraPrinterInterface {
   @override
   discoverPrinters() async {
     bool permissions = await checkPermissions();
-    if (permissions||true) {
+    if (permissions) {
       status = PrinterStatus.discoveringPrinter;
       notifier(this);
       String result = await channel.invokeMethod("discoverPrinters");
@@ -107,9 +108,12 @@ class ZebraPrinter implements ArtemisZebraPrinterInterface {
       String? pJson = await methodCall.arguments;
       if (pJson == null) return null;
       try {
+        log(pJson);
         FoundPrinter foundPrinter = FoundPrinter.fromJson(jsonDecode(pJson));
         log("printerFound : ${foundPrinter.toString()}");
-        foundPrinters.add(foundPrinter);
+        if(!foundPrinters.any((element) => element.address==foundPrinter.address)) {
+          foundPrinters.add(foundPrinter);
+        }
         notifier(this);
       } catch (e) {
         log("Parsing Printer Failed $e");
@@ -127,7 +131,7 @@ class ZebraPrinter implements ArtemisZebraPrinterInterface {
     }
   }
 
-  setSettings(Command setting, dynamic values) {
+  Future<dynamic> setSettings(Command setting, dynamic values) async {
     String command = "";
     switch (setting) {
       case Command.mediaType:
@@ -160,8 +164,13 @@ class ZebraPrinter implements ArtemisZebraPrinterInterface {
       command = '''~jc^xa^jus^xz''';
     }
 
-    try {
-      channel.invokeMethod("setSettings", {"SettingCommand": command});
-    } on PlatformException catch (e) {}
+      log("Setting => $command");
+      status = PrinterStatus.printing;
+      notifier(this);
+      await Future.delayed(const Duration(milliseconds: 300));
+      await channel.invokeMethod("printData", {"data": command});
+      status = PrinterStatus.ready;
+      notifier(this);
+
   }
 }

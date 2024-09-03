@@ -20,10 +20,4 @@ A new Flutter project.
   s.platform = :osx, '10.11'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
   s.swift_version = '5.0'
-
-  s.static_framework = true
-  s.preserve_paths = 'libZSDK_API.a', 'ExternalAccessory.framework', 'QuartzCore.framework'
-  s.xcconfig = { 'OTHER_LDFLAGS' => '-framework ExternalAccessory -framework QuartzCore -lZSDK_API' }
-  s.vendored_libraries = 'libZSDK_API'
-  s.vendored_frameworks = 'ExternalAccessory.framework', 'QuartzCore.framework'
 end

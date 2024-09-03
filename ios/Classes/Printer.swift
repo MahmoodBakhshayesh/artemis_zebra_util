@@ -4,7 +4,7 @@
 //
 //  Created by faranegar on 6/21/20.
 //
-
+import AVFoundation
 import Foundation
 
 
@@ -70,12 +70,17 @@ class Printer{
         let devices = manager.connectedAccessories
         for d in devices {
             print("Message from ios: orinter found")
-            let data: [String: Any] = [
-                "name": d.name,
-                "address": d.serialNumber,
-                "type": 1
-            ]
-            self.channel?.invokeMethod("printerFound", arguments: data)
+//            let data: [String: Any] = [
+//                "name": d.name,
+//                "address": d.serialNumber,
+//                "type": 1
+//            ]
+            let data = DeviceData(name: d.name, address: d.serialNumber, type: 1)
+
+            let jsonEncoder = JSONEncoder()
+            let jsonData = try! jsonEncoder.encode(data)
+            let json = String(data: jsonData, encoding: String.Encoding.utf8)
+            self.channel?.invokeMethod("printerFound", arguments: json)
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             result("Discovery Done Devices Found: "+String(devices.count))
@@ -101,29 +106,66 @@ class Printer{
     }
     
     func connectToPrinter(address: String,result: @escaping FlutterResult){
-        if(self.isConnecting == false) {
+        if self.isConnecting == false {
             self.isConnecting = true
             self.isZebraPrinter = true
             selectedIPAddress = nil
-            if(self.connection != nil){
+
+            // Close any existing connection before starting a new one
+            if self.connection != nil {
                 self.connection?.close()
             }
-            if(!address.contains(".")){
-                self.connection = MfiBtPrinterConnection(serialNumber: address)
-            }else {
-                self.connection = TcpPrinterConnection(address: address, andWithPort: 9100)
-            }
-            Thread.sleep(forTimeInterval: 1)
-            let isOpen = self.connection?.open()
-            self.isConnecting = false
-            if isOpen == true {
+
+            // Perform the connection process on a background thread
+            DispatchQueue.global(qos: .userInitiated).async {
+                // Determine the type of connection based on the address format
+                if !address.contains(".") {
+                    self.connection = MfiBtPrinterConnection(serialNumber: address)
+                } else {
+                    self.connection = TcpPrinterConnection(address: address, andWithPort: 9100)
+                }
+
+                // Introduce a small delay before attempting to open the connection
                 Thread.sleep(forTimeInterval: 1)
-                self.selectedIPAddress = address
-                result(true)
-            } else {
-                result(false)
+
+                let isOpen = self.connection?.open()
+
+                DispatchQueue.main.async {
+                    self.isConnecting = false
+
+                    if isOpen == true {
+                        Thread.sleep(forTimeInterval: 1)
+                        self.selectedIPAddress = address
+                        result(true)
+                    } else {
+                        result(false)
+                    }
+                }
             }
         }
+//         if(self.isConnecting == false) {
+//             self.isConnecting = true
+//             self.isZebraPrinter = true
+//             selectedIPAddress = nil
+//             if(self.connection != nil){
+//                 self.connection?.close()
+//             }
+//             if(!address.contains(".")){
+//                 self.connection = MfiBtPrinterConnection(serialNumber: address)
+//             }else {
+//                 self.connection = TcpPrinterConnection(address: address, andWithPort: 9100)
+//             }
+//             Thread.sleep(forTimeInterval: 1)
+//             let isOpen = self.connection?.open()
+//             self.isConnecting = false
+//             if isOpen == true {
+//                 Thread.sleep(forTimeInterval: 1)
+//                 self.selectedIPAddress = address
+//                 result(true)
+//             } else {
+//                 result(false)
+//             }
+//         }
     }
     
     func isPrinterConnect(result: @escaping FlutterResult){
@@ -189,4 +231,10 @@ class Printer{
     func toString() -> String{
         return String(UInt(bitPattern: ObjectIdentifier(self)))
     }
+}
+
+struct DeviceData: Codable {
+    var name: String?
+    var address: String?
+    var type: Int?
 }
