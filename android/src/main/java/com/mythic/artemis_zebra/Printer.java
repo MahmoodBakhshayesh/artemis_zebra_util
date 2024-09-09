@@ -46,7 +46,6 @@ import io.flutter.plugin.common.PluginRegistry;
 import pub.devrel.easypermissions.EasyPermissions;
 
 public class Printer implements MethodChannel.MethodCallHandler {
-
     private static final int ACCESS_COARSE_LOCATION_REQUEST_CODE = 100021;
     private static final int ON_DISCOVERY_ERROR_GENERAL = -1;
     private static final int ON_DISCOVERY_ERROR_BLUETOOTH = -2;
