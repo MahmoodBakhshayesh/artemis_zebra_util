@@ -2,7 +2,13 @@ package com.mythic.artemis_zebra;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,11 +20,14 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.location.LocationManager;
 import android.os.Build;
+import android.os.IBinder;
 import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 
 import com.google.gson.Gson;
 import com.zebra.sdk.comm.BluetoothConnection;
@@ -45,7 +54,7 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.PluginRegistry;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class Printer implements MethodChannel.MethodCallHandler {
+public class Printer extends Service implements MethodChannel.MethodCallHandler {
     private static final int ACCESS_COARSE_LOCATION_REQUEST_CODE = 100021;
     private static final int ON_DISCOVERY_ERROR_GENERAL = -1;
     private static final int ON_DISCOVERY_ERROR_BLUETOOTH = -2;
@@ -65,6 +74,9 @@ public class Printer implements MethodChannel.MethodCallHandler {
     private boolean isZebraPrinter = true;
     private Socketmanager socketmanager;
 
+    public Printer() {
+        // Default constructor is required for the Android service to work correctly
+    }
 
     public Printer(ActivityPluginBinding binding, BinaryMessenger binaryMessenger) {
         this.context = binding.getActivity();
@@ -82,7 +94,7 @@ public class Printer implements MethodChannel.MethodCallHandler {
                 break;
 
             case "discoverPrinters":
-                discoverPrinters(context,result);
+                discoverPrinters(context, result);
                 break;
 
             case "connectToPrinter":
@@ -187,10 +199,10 @@ public class Printer implements MethodChannel.MethodCallHandler {
             BluetoothDiscoverer.findPrinters(this.context, new DiscoveryHandler() {
                 @Override
                 public void foundPrinter(final DiscoveredPrinter discoveredPrinter) {
-                    Log.println(Log.ASSERT,"Printer Found!!!","Printer Found  &&&&");
+                    Log.println(Log.ASSERT, "Printer Found!!!", "Printer Found  &&&&");
                     ((Activity) context).runOnUiThread(() -> {
 
-                        Log.println(Log.ASSERT,"Printer Found!!!","Printer Found ****");
+                        Log.println(Log.ASSERT, "Printer Found!!!", "Printer Found ****");
                         String address = discoveredPrinter.address;
                         String name = discoveredPrinter.getDiscoveryDataMap().get("FRIENDLY_NAME");
                         HashMap<String, Object> arguments = new HashMap<>();
@@ -205,8 +217,8 @@ public class Printer implements MethodChannel.MethodCallHandler {
                 @Override
                 public void discoveryFinished() {
                     countEndScan++;
-                    Log.println(Log.ASSERT,"Bluetooth Discovery","Discovery Finish");
-                    if(countEndScan==2){
+                    Log.println(Log.ASSERT, "Bluetooth Discovery", "Discovery Finish");
+                    if (countEndScan == 2) {
                         countEndScan = 0;
                         result.success("DiscoveryDone");
                     }
@@ -271,8 +283,8 @@ public class Printer implements MethodChannel.MethodCallHandler {
                 @Override
                 public void discoveryFinished() {
                     countEndScan++;
-                    Log.println(Log.ASSERT,"Network Discovery","Discovery Finish");
-                    if(countEndScan==2){
+                    Log.println(Log.ASSERT, "Network Discovery", "Discovery Finish");
+                    if (countEndScan == 2) {
                         result.success("DiscoveryDone");
                     }
 //
@@ -287,7 +299,7 @@ public class Printer implements MethodChannel.MethodCallHandler {
             });
         } catch (Exception e) {
             e.printStackTrace();
-            Log.println(Log.ASSERT,"P",e.toString());
+            Log.println(Log.ASSERT, "P", e.toString());
 
         }
     }
@@ -304,35 +316,49 @@ public class Printer implements MethodChannel.MethodCallHandler {
         }
 
         new Thread(new Runnable() {
-                @Override
-                public void run() {
+            @Override
+            public void run() {
+                try {
+                    printerConnection.open();
+                } catch (ConnectionException e) {
+                    DemoSleeper.sleep(1000);
+                    disconnectPrinter(null);
+                    result.success(false);
+                }
+                if (printerConnection.isConnected()) {
                     try {
-                        printerConnection.open();
+                        printer = ZebraPrinterFactory.getInstance(printerConnection);
+                        startService(address);
+                        result.success(true);
                     } catch (ConnectionException e) {
+                        printer = null;
                         DemoSleeper.sleep(1000);
                         disconnectPrinter(null);
+                        stopService();
                         result.success(false);
-                    }
-                    if (printerConnection.isConnected()) {
-                        try {
-                            printer = ZebraPrinterFactory.getInstance(printerConnection);
-                            result.success(true);
-                        } catch (ConnectionException e) {
-                            printer = null;
-                            DemoSleeper.sleep(1000);
-                            disconnectPrinter(null);
-                            result.success(false);
-                        } catch (ZebraPrinterLanguageUnknownException e) {
-                            printer = null;
-                            DemoSleeper.sleep(1000);
-                            disconnectPrinter(null);
-                            result.success(false);
+                    } catch (ZebraPrinterLanguageUnknownException e) {
+                        printer = null;
+                        DemoSleeper.sleep(1000);
+                        disconnectPrinter(null);
+                        stopService();
+                        result.success(false);
 
-                        }
                     }
                 }
-            }).start();
+            }
+        }).start();
 
+    }
+
+    private void startService(final String address) {
+        Intent serviceIntent = new Intent(context, Printer.class);
+        serviceIntent.putExtra("printer_address", address);
+        context.startService(serviceIntent);
+    }
+
+    private void stopService() {
+        Intent serviceIntent = new Intent(context, Printer.class);
+        context.stopService(serviceIntent);
     }
 
     private void printData(String data, final MethodChannel.Result result) {
@@ -356,29 +382,46 @@ public class Printer implements MethodChannel.MethodCallHandler {
         }).start();
 
 
-
     }
 
     public void disconnectPrinter(final MethodChannel.Result result) {
-        if (isZebraPrinter) {
-            try {
-                if (printerConnection != null) {
-                    printerConnection.close();
-                }
 
-            } catch (ConnectionException e) {
-                e.printStackTrace();
-            } finally {
-                if (result != null) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (isZebraPrinter) {
+                        try {
+                            if (printerConnection != null) {
+                                printerConnection.close();
+                            }
+
+                        } catch (ConnectionException e) {
+                            e.printStackTrace();
+                        } finally {
+                            if (result != null) {
+                                stopService();
+                                result.success(true);
+                            }
+                        }
+                    } else {
+                        socketmanager.close();
+                        if (result != null) {
+                            stopService();
+                            result.success(true);
+                        }
+                    }
+                } catch (Exception e) {
+                    DemoSleeper.sleep(1000);
                     result.success(true);
                 }
+
             }
-        } else {
-            socketmanager.close();
-            if (result != null) {
-                result.success(true);
-            }
-        }
+        }).start();
+
+
+
+
     }
 
     public void isPrinterConnect(final MethodChannel.Result result) {
@@ -433,6 +476,9 @@ public class Printer implements MethodChannel.MethodCallHandler {
             if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_PRIVILEGED) != PackageManager.PERMISSION_GRANTED) {
                 listPermissionsNeeded.add(Manifest.permission.BLUETOOTH_PRIVILEGED);
             }
+            if (context.checkSelfPermission(Manifest.permission.FOREGROUND_SERVICE) != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(Manifest.permission.FOREGROUND_SERVICE);
+            }
             if (context.checkSelfPermission(Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
                 listPermissionsNeeded.add(Manifest.permission.BLUETOOTH);
             }
@@ -469,7 +515,7 @@ public class Printer implements MethodChannel.MethodCallHandler {
                 result.success(true);
             }
 
-        }else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 listPermissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
             }
@@ -481,6 +527,9 @@ public class Printer implements MethodChannel.MethodCallHandler {
 //            }
             if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_PRIVILEGED) != PackageManager.PERMISSION_GRANTED) {
                 listPermissionsNeeded.add(Manifest.permission.BLUETOOTH_PRIVILEGED);
+            }
+            if (context.checkSelfPermission(Manifest.permission.FOREGROUND_SERVICE) != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(Manifest.permission.FOREGROUND_SERVICE);
             }
 //            if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_ADVERTISE) != PackageManager.PERMISSION_GRANTED) {
 //                listPermissionsNeeded.add(Manifest.permission.BLUETOOTH_ADVERTISE);
@@ -849,7 +898,75 @@ public class Printer implements MethodChannel.MethodCallHandler {
         return data.getBytes();
     }
 
-//    public static String getZplCode(Bitmap bitmap, Boolean addHeaderFooter, int rotation) {
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        // Create a notification for the foreground service
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            NotificationChannel channel = new NotificationChannel(
+//                    "PrinterChannelId",
+//                    "Printer Service",
+//                    NotificationManager.IMPORTANCE_DEFAULT
+//            );
+//            NotificationManager manager = context.getApplicationContext().getSystemService(NotificationManager.class);
+//            if (manager != null) {
+//                manager.createNotificationChannel(channel);
+//            }
+//        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createNotificationChannel();
+        }
+
+
+        Intent notificationIntent = new Intent(this, Printer.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        Notification notification = new NotificationCompat.Builder(this, "PrinterChannelId")
+                .setContentTitle("Zebra Printer Service")
+                .setContentText("The printer connection is active")
+//                .setSmallIcon(R.drawable.ic_printer) // your icon
+                .setContentIntent(pendingIntent)
+                .build();
+
+        // Start the service in the foreground
+
+        startForeground(1, notification);
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    "PrinterChannelId",
+                    "Printer Service Channel",
+                    NotificationManager.IMPORTANCE_DEFAULT
+            );
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager != null) {
+                manager.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        if (printerConnection != null && printerConnection.isConnected()) {
+            try {
+                printerConnection.close();
+            } catch (ConnectionException e) {
+                e.printStackTrace();
+            }
+        }
+        super.onDestroy();
+    }
+
+    //    public static String getZplCode(Bitmap bitmap, Boolean addHeaderFooter, int rotation) {
 //        ZPLConverter zp = new ZPLConverter();
 //        zp.setCompressHex(true);
 //        zp.setBlacknessLimitPercentage(50);

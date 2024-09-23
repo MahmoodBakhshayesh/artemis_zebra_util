@@ -17,6 +17,8 @@ class Printer{
     var isZebraPrinter :Bool = true
     var wifiManager: POSWIFIManager?
     var isConnecting :Bool = false
+    var backgroundTask: UIBackgroundTaskIdentifier = .invalid
+
     
     static func getInstance(binaryMessenger : FlutterBinaryMessenger) -> Printer {
         let printer = Printer()
@@ -116,6 +118,12 @@ class Printer{
             if self.connection != nil {
                 self.connection?.close()
             }
+            
+            backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "PrinterConnection") {
+                            // End the task if time expires
+                            UIApplication.shared.endBackgroundTask(self.backgroundTask)
+                            self.backgroundTask = .invalid
+                        }
 
             // Perform the connection process on a background thread
             DispatchQueue.global(qos: .userInitiated).async {
@@ -141,32 +149,14 @@ class Printer{
                     } else {
                         result(false)
                     }
+                    
+                    if self.backgroundTask != .invalid {
+                        UIApplication.shared.endBackgroundTask(self.backgroundTask)
+                        self.backgroundTask = .invalid
+                    }
                 }
             }
         }
-//         if(self.isConnecting == false) {
-//             self.isConnecting = true
-//             self.isZebraPrinter = true
-//             selectedIPAddress = nil
-//             if(self.connection != nil){
-//                 self.connection?.close()
-//             }
-//             if(!address.contains(".")){
-//                 self.connection = MfiBtPrinterConnection(serialNumber: address)
-//             }else {
-//                 self.connection = TcpPrinterConnection(address: address, andWithPort: 9100)
-//             }
-//             Thread.sleep(forTimeInterval: 1)
-//             let isOpen = self.connection?.open()
-//             self.isConnecting = false
-//             if isOpen == true {
-//                 Thread.sleep(forTimeInterval: 1)
-//                 self.selectedIPAddress = address
-//                 result(true)
-//             } else {
-//                 result(false)
-//             }
-//         }
     }
     
     func isPrinterConnect(result: @escaping FlutterResult){
@@ -188,18 +178,34 @@ class Printer{
     
     
     func disconnect(result: FlutterResult?) {
-        if self.isZebraPrinter == true {
-            if self.connection != nil {
-                self.connection?.close()
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+
+            if self.isZebraPrinter {
+                if let connection = self.connection {
+                    connection.close()  // Close the connection in the background thread
+                }
+                DispatchQueue.main.async {
+                    // Notify the Flutter side that the connection is lost
+                    self.channel?.invokeMethod("connectionLost", arguments: nil)
+                    result?(true)  // Call the result callback on the main thread
+                }
+            } else {
+                if let wifiManager = self.wifiManager {
+                    wifiManager.posDisConnect()  // Disconnect Wi-Fi connection in the background thread
+                }
+                DispatchQueue.main.async {
+                    // Notify the Flutter side that the connection is lost
+                    self.channel?.invokeMethod("connectionLost", arguments: nil)
+                    result?(true)  // Call the result callback on the main thread
+                }
             }
-            self.channel?.invokeMethod("connectionLost",arguments: nil);
-            result?(true)
-        } else {
-            if self.wifiManager != nil{
-                self.wifiManager?.posDisConnect()
+
+            // End the background task in the background thread
+            if self.backgroundTask != .invalid {
+                UIApplication.shared.endBackgroundTask(self.backgroundTask)
+                self.backgroundTask = .invalid
             }
-            self.channel?.invokeMethod("connectionLost",arguments: nil);
-            result?(true)
         }
     }
     
