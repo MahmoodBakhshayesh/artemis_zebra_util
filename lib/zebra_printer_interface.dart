@@ -26,6 +26,22 @@ abstract class ArtemisZebraPrinterInterface {
   Future<bool> checkPermissions() {
     throw UnimplementedError('checkPermissions() has not been implemented.');
   }
+
+  Future<String> checkPrinterStatus() {
+    throw UnimplementedError('checkPermissions() has not been implemented.');
+  }
+
+  Future<String> sendZplOverTcp() {
+    throw UnimplementedError('checkPermissions() has not been implemented.');
+  }
+
+  Future<String> sendCpclOverTcp() {
+    throw UnimplementedError('checkPermissions() has not been implemented.');
+  }
+
+  Future<String> sampleWithGCD() {
+    throw UnimplementedError('checkPermissions() has not been implemented.');
+  }
 }
 
 enum PrinterType { wifi, bluetooth }

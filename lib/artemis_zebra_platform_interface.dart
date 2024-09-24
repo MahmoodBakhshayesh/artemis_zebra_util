@@ -38,7 +38,7 @@ abstract class ArtemisZebraUtilPlatform extends PlatformInterface {
     throw UnimplementedError('setMethodCallHandler() has not been implemented.');
   }
 
-  Future<ZebraPrinter> getZebraPrinterInstance({String? label,required void Function(ZebraPrinter) notifier}) {
+  Future<ZebraPrinter> getZebraPrinterInstance({String? label,required void Function(ZebraPrinter) notifier,Function? statusListener}) {
     throw UnimplementedError('getZebraPrinterInstance() has not been implemented.');
   }
 }

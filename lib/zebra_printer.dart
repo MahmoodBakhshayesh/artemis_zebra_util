@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:artemis_zebra/artemis_zebra.dart';
 import 'package:flutter/services.dart';
 
 import 'zebra_printer_interface.dart';
@@ -9,19 +10,23 @@ import 'zebra_printer_interface.dart';
 class ZebraPrinter implements ArtemisZebraPrinterInterface {
   late MethodChannel channel;
   late String instanceID;
+
   late void Function(ZebraPrinter) notifier;
 
-  ZebraPrinter(String id, {String? label, required void Function(ZebraPrinter) notifierFunction}) {
+  ZebraPrinter(String id, {String? label, required void Function(ZebraPrinter) notifierFunction,Function? statusListener}) {
     channel = MethodChannel('ZebraPrinterInstance$id');
     log("ZebraPrinterInstanceCreated: $id  (${label ?? id})");
     instanceID = label == null ? id : "$id ($label)";
     notifier = notifierFunction;
     channel.setMethodCallHandler(_printerMethodCallHandler);
+    broadCastStatus(statusListener);
   }
 
   PrinterStatus status = PrinterStatus.disconnected;
   bool isRotated = false;
   List<FoundPrinter> foundPrinters = [];
+
+  ZebraPrinterStatus? zebraPrinterStatus;
 
   @override
   checkPermissions() async {
@@ -179,5 +184,37 @@ class ZebraPrinter implements ArtemisZebraPrinterInterface {
       status = PrinterStatus.ready;
       notifier(this);
 
+  }
+
+ @override
+  Future<String> checkPrinterStatus()async {
+    return await channel.invokeMethod("checkPrinterStatus");
+  }
+  @override
+  Future<String> sendZplOverTcp()async {
+    return await channel.invokeMethod("sendZplOverTcp");
+  }
+  @override
+  Future<String> sendCpclOverTcp()async {
+    return await channel.invokeMethod("sendCpclOverTcp");
+  }
+  @override
+  Future<String> sampleWithGCD()async {
+    return await channel.invokeMethod("sampleWithGCD");
+  }
+
+  void broadCastStatus(Function? listener) {
+    channel.invokeMethod('checkPrinterStatus').then((v){
+
+      try{
+        final status = ZebraPrinterStatus.fromJson(jsonDecode(v));
+        listener?.call(status);
+        broadCastStatus(listener);
+      }catch(e){
+        Future.delayed(const Duration(seconds: 5),(){
+          broadCastStatus(listener);
+        });
+      }
+    });
   }
 }

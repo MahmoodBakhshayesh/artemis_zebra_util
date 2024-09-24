@@ -34,6 +34,7 @@ import com.zebra.sdk.comm.BluetoothConnection;
 import com.zebra.sdk.comm.Connection;
 import com.zebra.sdk.comm.ConnectionException;
 import com.zebra.sdk.comm.TcpConnection;
+import com.zebra.sdk.printer.PrinterStatus;
 import com.zebra.sdk.printer.ZebraPrinter;
 import com.zebra.sdk.printer.ZebraPrinterFactory;
 import com.zebra.sdk.printer.ZebraPrinterLanguageUnknownException;
@@ -113,6 +114,11 @@ public class Printer extends Service implements MethodChannel.MethodCallHandler 
 
             case "isPrinterConnected":
                 isPrinterConnect(result);
+                break;
+
+
+            case "checkPrinterStatus":
+                checkPrinterStatus(result);
                 break;
 
             default:
@@ -420,8 +426,6 @@ public class Printer extends Service implements MethodChannel.MethodCallHandler 
         }).start();
 
 
-
-
     }
 
     public void isPrinterConnect(final MethodChannel.Result result) {
@@ -458,6 +462,58 @@ public class Printer extends Service implements MethodChannel.MethodCallHandler 
                 result.success(false);
             }
         }
+    }
+
+    public void checkPrinterStatus(final MethodChannel.Result result) {
+            tempIsPrinterConnect = true;
+            if (printerConnection != null && printerConnection.isConnected()) {
+                new Thread(new Runnable() {
+                    public void run() {
+
+                        try {
+                            printerConnection.open();
+                            ZebraPrinter printer = ZebraPrinterFactory.getInstance(printerConnection);
+
+                            PrinterStatus printerStatus = printer.getCurrentStatus();
+
+                            MyPrinterStatus myPrinterStatus = new MyPrinterStatus(printerStatus.isReadyToPrint, printerStatus.isHeadOpen, printerStatus.isHeadCold, printerStatus.isHeadTooHot,printerStatus.isPaperOut,printerStatus.isRibbonOut,printerStatus.isReceiveBufferFull,printerStatus.isPaused,printerStatus.labelLengthInDots,printerStatus.numberOfFormatsInReceiveBuffer,printerStatus.labelsRemainingInBatch,printerStatus.isPartialFormatInProgress,printerStatus.printMode.ordinal());
+
+                            String jsonOutput = myPrinterStatus.toJson();
+//                            if (jsonOutput != null) {
+//                                System.out.println("JSON Output: " + jsonOutput);
+//                            } else {
+//                                System.out.println("Failed to convert to JSON.");
+//                            }
+
+
+                            result.success(jsonOutput);
+                            if (printerStatus.isReadyToPrint) {
+                                System.out.println("Ready To Print");
+                            } else if (printerStatus.isPaused) {
+                                System.out.println("Cannot Print because the printer is paused.");
+                            } else if (printerStatus.isHeadOpen) {
+                                System.out.println("Cannot Print because the printer head is open.");
+                            } else if (printerStatus.isPaperOut) {
+                                System.out.println("Cannot Print because the paper is out.");
+                            } else {
+                                System.out.println("Cannot Print.");
+                            }
+                        } catch (ConnectionException e) {
+                            result.success("Not Connected");
+//                            e.printStackTrace();
+//                            result.error(e.toString(),e.toString(),e);
+                        } catch (ZebraPrinterLanguageUnknownException e) {
+                            result.success("Not Connected");
+//                            e.printStackTrace();
+//                            result.error(e.toString(),e.toString(),e);
+                        } finally {
+                        }
+                    }
+                }).start();
+            } else {
+                result.success("Not Connected");
+//                result.error("Not Connected","not connected",null);
+            }
     }
 
 

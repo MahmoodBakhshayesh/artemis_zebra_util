@@ -32,10 +32,12 @@ class MethodChannelArtemisZebraUtil extends ArtemisZebraUtilPlatform {
   }
 
   @override
-  Future<ZebraPrinter> getZebraPrinterInstance({String? label, required void Function(ZebraPrinter) notifier}) async {
+  Future<ZebraPrinter> getZebraPrinterInstance({String? label, required void Function(ZebraPrinter) notifier,Function? statusListener}) async {
     getPermissions();
     String id = await methodChannel.invokeMethod("getInstance");
-    ZebraPrinter printer = ZebraPrinter(id, label: label, notifierFunction: notifier);
+    ZebraPrinter printer = ZebraPrinter(id, label: label, notifierFunction: notifier,statusListener: statusListener);
+    print("${printer.instanceID}");
+
     return printer;
   }
 

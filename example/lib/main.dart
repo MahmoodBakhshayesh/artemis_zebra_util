@@ -23,7 +23,7 @@ class _MyAppState extends State<MyApp> {
   final _artemisZebraUtilPlugin = ArtemisZebraUtil();
   late ZebraPrinter printer;
   List<ZebraPrinter> printers = [];
-
+  ZebraPrinterStatus? status;
   @override
   void initState() {
     super.initState();
@@ -36,8 +36,7 @@ class _MyAppState extends State<MyApp> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     // We also handle the message potentially returning null.
     try {
-      printer = await ArtemisZebraUtil.getPrinterInstance(
-          notifier: (_) => setState(() {}));
+      printer = await ArtemisZebraUtil.getPrinterInstance(notifier: (_) => setState(() {}));
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }
@@ -54,10 +53,17 @@ class _MyAppState extends State<MyApp> {
       home: Scaffold(
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
-            ZebraPrinter p = await ArtemisZebraUtil.getPrinterInstance(label: "BP TEST", notifier: (p) {
-              print("Notifier called ${p.status.name}");
-              setState(() {});
-            });
+            ZebraPrinter p = await ArtemisZebraUtil.getPrinterInstance(
+                label: "BP TEST",
+                notifier: (p) {
+                  print("Notifier called ${p.status.name}");
+                  setState(() {});
+                },
+                statusListener: (ZebraPrinterStatus s) {
+                  print("Status recieved");
+                  status = s;
+                  setState((){});
+                });
             printers.add(p);
             setState(() {});
             // ArtemisZebraUtil().getPlatformVersion().then((value){
@@ -108,16 +114,18 @@ class _MyAppState extends State<MyApp> {
                                   // e.connectToPrinter("192.168.1.8");
                                   // print(e.foundPrinters.map((e) => e.address));
                                   // e.disconnectPrinter();
-                                  if(e.status == PrinterStatus.disconnected){
-                                    e.connectToPrinter(e.foundPrinters.first.address);
-                                  }else{
+                                  if (e.status == PrinterStatus.disconnected) {
+                                    if (e.foundPrinters.isEmpty) {
+                                      e.connectToPrinter('192.168.45.92');
+                                    } else {
+                                      e.connectToPrinter(e.foundPrinters.first.address);
+                                    }
+                                  } else {
                                     e.disconnectPrinter();
                                   }
-
                                 },
                                 child: const Text("Connect"),
                               ),
-
                               TextButton(
                                 onPressed: () {
                                   e.printData('''
@@ -169,39 +177,69 @@ class _MyAppState extends State<MyApp> {
                             ],
                           ),
                         ),
-                        Row(children: [
-                          TextButton(
-                            onPressed: () async {
-                              await e.setSettings(Command.mediaType, MediaType.label);
+                        Row(
+                          children: [
+                            TextButton(
+                              onPressed: () async {
+                                await e.setSettings(Command.mediaType, MediaType.label);
 
-                              // await e.setSettings(Command.mediaType, MediaType.journal);
-                              // await e.setSettings(Command.mediaType, MediaType.label);
-                              // await e.setSettings(Command.mediaType, MediaType.journal);
-                            },
-                            child: const Text("Label"),
-                          ),
-                          TextButton(
-                            onPressed: () async {
-                              await e.setSettings(Command.mediaType, MediaType.journal);
+                                // await e.setSettings(Command.mediaType, MediaType.journal);
+                                // await e.setSettings(Command.mediaType, MediaType.label);
+                                // await e.setSettings(Command.mediaType, MediaType.journal);
+                              },
+                              child: const Text("Label"),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                await e.setSettings(Command.mediaType, MediaType.journal);
 
-                              // await e.setSettings(Command.mediaType, MediaType.journal);
-                              // await e.setSettings(Command.mediaType, MediaType.label);
-                              // await e.setSettings(Command.mediaType, MediaType.journal);
-                            },
-                            child: const Text("Journal"),
-                          ),
-                          TextButton(
-                            onPressed: () async {
-                              await e.setSettings(Command.mediaType, MediaType.blackMark);
+                                // await e.setSettings(Command.mediaType, MediaType.journal);
+                                // await e.setSettings(Command.mediaType, MediaType.label);
+                                // await e.setSettings(Command.mediaType, MediaType.journal);
+                              },
+                              child: const Text("Journal"),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                await e.setSettings(Command.mediaType, MediaType.blackMark);
 
-                              // await e.setSettings(Command.mediaType, MediaType.journal);
-                              // await e.setSettings(Command.mediaType, MediaType.label);
-                              // await e.setSettings(Command.mediaType, MediaType.journal);
-                            },
-                            child: const Text("Black"),
-                          ),
-
-                        ],),
+                                // await e.setSettings(Command.mediaType, MediaType.journal);
+                                // await e.setSettings(Command.mediaType, MediaType.label);
+                                // await e.setSettings(Command.mediaType, MediaType.journal);
+                              },
+                              child: const Text("Black"),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            TextButton(
+                              onPressed: () async {
+                                await e.checkPrinterStatus();
+                              },
+                              child: const Text("Check Status"),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                await e.sendZplOverTcp();
+                              },
+                              child: const Text("Zpl"),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                await e.sendCpclOverTcp();
+                              },
+                              child: const Text("Cpcl"),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                await e.sampleWithGCD();
+                              },
+                              child: const Text("GCD"),
+                            ),
+                          ],
+                        ),
+                        Text(status?.toString()??'--'),
                         Row(
                           children: e.foundPrinters.map((e) => Text("${e.name} ${e.address}")).toList(),
                         )
@@ -213,6 +251,4 @@ class _MyAppState extends State<MyApp> {
       ),
     );
   }
-
-
 }
