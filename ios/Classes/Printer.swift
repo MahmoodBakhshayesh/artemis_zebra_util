@@ -300,6 +300,67 @@ class Printer{
 //            showAlert(title: "Error", message: error.localizedDescription)
         }
         
+        }else if let zebraPrinterConnection = self.connection as? MfiBtPrinterConnection {
+            do {
+                // Get printer instance from connection.
+                let printer = try ZebraPrinterFactory.getInstance(zebraPrinterConnection)
+                
+                // Get the current status of the printer.
+                let printerStatus = try printer.getCurrentStatus()
+                let status = MyPrinterStatus(isReadyToPrint: printerStatus.isReadyToPrint, isHeadOpen: printerStatus.isHeadOpen, isHeadCold: printerStatus.isHeadCold, isHeadTooHot: printerStatus.isHeadTooHot, isPaperOut: printerStatus.isPaperOut, isRibbonOut: printerStatus.isRibbonOut, isReceiveBufferFull: printerStatus.isReceiveBufferFull, isPaused: printerStatus.isPaused, labelLengthInDots: printerStatus.labelLengthInDots, numberOfFormatsInReceiveBuffer: printerStatus.numberOfFormatsInReceiveBuffer, labelsRemainingInBatch: printerStatus.labelsRemainingInBatch, isPartialFormatInProgress: printerStatus.isPartialFormatInProgress, printMode: printerStatus.printMode.rawValue)
+                
+                let jsonEncoder = JSONEncoder()
+                let jsonData = try! jsonEncoder.encode(status)
+                let json = String(data: jsonData, encoding: String.Encoding.utf8)
+                
+                result(json)
+            } catch {
+                // Handle any errors thrown by the printer operations.
+                result(error.localizedDescription)
+    //            showAlert(title: "Error", message: error.localizedDescription)
+            }
+        }
+        else {
+            result("Not TCP")
+            return
+        }
+        }
+    }
+    
+    func checkPrinterStatus2(result: @escaping FlutterResult) {
+        // Instantiate connection for TCP port at the given address.
+         DispatchQueue.global(qos: .utility).async {
+        if(self.connection==nil){
+            result("Not Connected")
+            return
+        }
+             if let zebraPrinterConnection = self.connection as? MfiBtPrinterConnection {
+            // obj is a string array. Do something with stringArray
+
+        
+
+        // Open the connection - physical connection is established here.
+//        let success = zebraPrinterConnection.open()
+        
+        do {
+            // Get printer instance from connection.
+            let printer = try ZebraPrinterFactory.getInstance(zebraPrinterConnection)
+            
+            // Get the current status of the printer.
+            let printerStatus = try printer.getCurrentStatus()
+            let status = MyPrinterStatus(isReadyToPrint: printerStatus.isReadyToPrint, isHeadOpen: printerStatus.isHeadOpen, isHeadCold: printerStatus.isHeadCold, isHeadTooHot: printerStatus.isHeadTooHot, isPaperOut: printerStatus.isPaperOut, isRibbonOut: printerStatus.isRibbonOut, isReceiveBufferFull: printerStatus.isReceiveBufferFull, isPaused: printerStatus.isPaused, labelLengthInDots: printerStatus.labelLengthInDots, numberOfFormatsInReceiveBuffer: printerStatus.numberOfFormatsInReceiveBuffer, labelsRemainingInBatch: printerStatus.labelsRemainingInBatch, isPartialFormatInProgress: printerStatus.isPartialFormatInProgress, printMode: printerStatus.printMode.rawValue)
+            
+            let jsonEncoder = JSONEncoder()
+            let jsonData = try! jsonEncoder.encode(status)
+            let json = String(data: jsonData, encoding: String.Encoding.utf8)
+            
+            result(json)
+        } catch {
+            // Handle any errors thrown by the printer operations.
+            result(error.localizedDescription)
+//            showAlert(title: "Error", message: error.localizedDescription)
+        }
+        
         }
         else {
             result("Not TCP")
