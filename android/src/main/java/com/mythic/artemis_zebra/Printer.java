@@ -981,44 +981,44 @@ public class Printer extends Service implements MethodChannel.MethodCallHandler 
         }
 
 
-        Intent notificationIntent = new Intent(this, Printer.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
-        Notification notification = new NotificationCompat.Builder(this, "PrinterChannelId")
-                .setContentTitle("Zebra Printer Service")
-                .setContentText("The printer connection is active")
-//                .setSmallIcon(R.drawable.ic_printer) // your icon
-                .setContentIntent(pendingIntent)
-                .build();
-
-        // Start the service in the foreground
-
-        startForeground(1, notification);
+//        Intent notificationIntent = new Intent(this, Printer.class);
+//        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+//
+//        Notification notification = new NotificationCompat.Builder(this, "PrinterChannelId")
+//                .setContentTitle("Zebra Printer Service")
+//                .setContentText("The printer connection is active")
+////                .setSmallIcon(R.drawable.ic_printer) // your icon
+//                .setContentIntent(pendingIntent)
+//                .build();
+//
+//        // Start the service in the foreground
+//
+//        startForeground(1, notification);
     }
 
     private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    "PrinterChannelId",
-                    "Printer Service Channel",
-                    NotificationManager.IMPORTANCE_DEFAULT
-            );
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            if (manager != null) {
-                manager.createNotificationChannel(channel);
-            }
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            NotificationChannel channel = new NotificationChannel(
+//                    "PrinterChannelId",
+//                    "Printer Service Channel",
+//                    NotificationManager.IMPORTANCE_DEFAULT
+//            );
+//            NotificationManager manager = getSystemService(NotificationManager.class);
+//            if (manager != null) {
+//                manager.createNotificationChannel(channel);
+//            }
+//        }
     }
 
     @Override
     public void onDestroy() {
-        if (printerConnection != null && printerConnection.isConnected()) {
-            try {
-                printerConnection.close();
-            } catch (ConnectionException e) {
-                e.printStackTrace();
-            }
-        }
+//        if (printerConnection != null && printerConnection.isConnected()) {
+//            try {
+//                printerConnection.close();
+//            } catch (ConnectionException e) {
+//                e.printStackTrace();
+//            }
+//        }
         super.onDestroy();
     }
 

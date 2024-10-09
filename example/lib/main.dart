@@ -79,7 +79,7 @@ class _MyAppState extends State<MyApp> {
           children: [
             TextButton(
                 onPressed: () {
-                  // getPermissions();
+                  getPermissions();
                 },
                 child: const Text("Get Permissions")),
             ...printers
@@ -255,5 +255,9 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
     );
+  }
+
+  void getPermissions() {
+      ArtemisZebraUtil.getPermissions();
   }
 }

@@ -2,6 +2,7 @@
 import 'dart:developer';
 
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'artemis_zebra_platform_interface.dart';
 import 'zebra_printer.dart';
@@ -25,6 +26,13 @@ class ArtemisZebraUtil {
 
   static Future<ZebraPrinter> getPrinterInstance({String? label,required void Function(ZebraPrinter) notifier,Function? statusListener}) async {
     return ArtemisZebraUtilPlatform.instance.getZebraPrinterInstance(label:label,notifier:notifier,statusListener: statusListener);
+  }
+  static Future<void> getPermissions() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.nearbyWifiDevices,
+      // Permission.storage,
+    ].request();
+    print("Persmissions: ${statuses[Permission.location]}");
   }
 
   Future<dynamic> _methodCallHandler(MethodCall methodCall) async {
