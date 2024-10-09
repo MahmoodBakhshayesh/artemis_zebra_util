@@ -14,7 +14,7 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
-		ACD028DC28A26186001EAFF1 /* libZSDK_API.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ACD028DB28A26185001EAFF1 /* libZSDK_API.a */; };
+		AC50929E2CB6D85E00F864A6 /* libZSDK_API.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AC50929D2CB6D85E00F864A6 /* libZSDK_API.a */; };
 		ACD028E028A26F98001EAFF1 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ACD028DF28A26F98001EAFF1 /* QuartzCore.framework */; };
 /* End PBXBuildFile section */
 
@@ -46,7 +46,7 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		ACD028DB28A26185001EAFF1 /* libZSDK_API.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libZSDK_API.a; sourceTree = "<group>"; };
+		AC50929D2CB6D85E00F864A6 /* libZSDK_API.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libZSDK_API.a; sourceTree = "<group>"; };
 		ACD028DD28A26AD7001EAFF1 /* artemis_zebra.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = artemis_zebra.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		ACD028DF28A26F98001EAFF1 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		AF2970A42BAFFE7F33B95434 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
@@ -60,7 +60,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				ACD028E028A26F98001EAFF1 /* QuartzCore.framework in Frameworks */,
-				ACD028DC28A26186001EAFF1 /* libZSDK_API.a in Frameworks */,
+				AC50929E2CB6D85E00F864A6 /* libZSDK_API.a in Frameworks */,
 				7C93A2F18A8BBE775FC376B5 /* Pods_Runner.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -92,7 +92,7 @@
 		97C146E51CF9000F007C117D = {
 			isa = PBXGroup;
 			children = (
-				ACD028DB28A26185001EAFF1 /* libZSDK_API.a */,
+				AC50929D2CB6D85E00F864A6 /* libZSDK_API.a */,
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,

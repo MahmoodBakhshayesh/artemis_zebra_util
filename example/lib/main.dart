@@ -24,6 +24,7 @@ class _MyAppState extends State<MyApp> {
   late ZebraPrinter printer;
   List<ZebraPrinter> printers = [];
   ZebraPrinterStatus? status;
+
   @override
   void initState() {
     super.initState();
@@ -62,7 +63,7 @@ class _MyAppState extends State<MyApp> {
                 statusListener: (ZebraPrinterStatus s) {
                   print("Status recieved");
                   status = s;
-                  setState((){});
+                  setState(() {});
                 });
             printers.add(p);
             setState(() {});
@@ -116,9 +117,13 @@ class _MyAppState extends State<MyApp> {
                                   // e.disconnectPrinter();
                                   if (e.status == PrinterStatus.disconnected) {
                                     if (e.foundPrinters.isEmpty) {
-                                      e.connectToPrinter('192.168.45.92');
+                                      e.connectToPrinter('192.168.45.151');
                                     } else {
-                                      e.connectToPrinter(e.foundPrinters.first.address);
+                                      if (printers.indexOf(e) != 0) {
+                                        e.connectToPrinter(e.foundPrinters.last.address);
+                                      } else {
+                                        e.connectToPrinter(e.foundPrinters.first.address);
+                                      }
                                     }
                                   } else {
                                     e.disconnectPrinter();
@@ -239,7 +244,7 @@ class _MyAppState extends State<MyApp> {
                             ),
                           ],
                         ),
-                        Text(status?.toString()??'--'),
+                        Text(status?.toString() ?? '--'),
                         Row(
                           children: e.foundPrinters.map((e) => Text("${e.name} ${e.address}")).toList(),
                         )

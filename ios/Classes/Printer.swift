@@ -268,7 +268,7 @@ class Printer{
     
     func checkPrinterStatus(result: @escaping FlutterResult) {
         // Instantiate connection for TCP port at the given address.
-       
+         DispatchQueue.global(qos: .utility).async {
         if(self.connection==nil){
             result("Not Connected")
             return
@@ -297,13 +297,14 @@ class Printer{
         } catch {
             // Handle any errors thrown by the printer operations.
             result(error.localizedDescription)
-            showAlert(title: "Error", message: error.localizedDescription)
+//            showAlert(title: "Error", message: error.localizedDescription)
         }
         
         }
         else {
             result("Not TCP")
             return
+        }
         }
     }
     
