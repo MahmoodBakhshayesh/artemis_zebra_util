@@ -2,7 +2,7 @@ PODS:
   - artemis_zebra (0.0.1):
     - Flutter
   - Flutter (1.0.0)
-  - permission_handler_apple (9.0.4):
+  - permission_handler_apple (9.3.0):
     - Flutter
 
 DEPENDENCIES:
@@ -21,7 +21,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   artemis_zebra: e3ed8f423b2fb10fba9b63ae7ca0b7d3d183bdf8
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  permission_handler_apple: 44366e37eaf29454a1e7b1b7d736c2cceaeb17ce
+  permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
 
 PODFILE CHECKSUM: c4c93c5f6502fe2754f48404d3594bf779584011
 

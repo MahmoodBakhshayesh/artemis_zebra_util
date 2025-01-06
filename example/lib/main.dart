@@ -61,7 +61,7 @@ class _MyAppState extends State<MyApp> {
                   setState(() {});
                 },
                 statusListener: (ZebraPrinterStatus s) {
-                  print("Status recieved");
+                  // print("Status recieved");
                   status = s;
                   setState(() {});
                 });

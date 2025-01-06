@@ -205,11 +205,11 @@ public class Printer extends Service implements MethodChannel.MethodCallHandler 
             BluetoothDiscoverer.findPrinters(this.context, new DiscoveryHandler() {
                 @Override
                 public void foundPrinter(final DiscoveredPrinter discoveredPrinter) {
-                    Log.println(Log.ASSERT, "Printer Found!!!", "Printer Found  &&&&");
                     ((Activity) context).runOnUiThread(() -> {
 
-                        Log.println(Log.ASSERT, "Printer Found!!!", "Printer Found ****");
                         String address = discoveredPrinter.address;
+                        Log.println(Log.ASSERT, "Printer Found!!!", "Printer Found " + discoveredPrinter.address);
+
                         String name = discoveredPrinter.getDiscoveryDataMap().get("FRIENDLY_NAME");
                         HashMap<String, Object> arguments = new HashMap<>();
                         arguments.put("address", address);
@@ -226,7 +226,12 @@ public class Printer extends Service implements MethodChannel.MethodCallHandler 
                     Log.println(Log.ASSERT, "Bluetooth Discovery", "Discovery Finish");
                     if (countEndScan == 2) {
                         countEndScan = 0;
-                        result.success("DiscoveryDone");
+                        try {
+                            result.success("DiscoveryDone");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Log.println(Log.ASSERT, "P", e.toString());
+                        }
                     }
                 }
 
@@ -291,7 +296,17 @@ public class Printer extends Service implements MethodChannel.MethodCallHandler 
                     countEndScan++;
                     Log.println(Log.ASSERT, "Network Discovery", "Discovery Finish");
                     if (countEndScan == 2) {
-                        result.success("DiscoveryDone");
+                        try {
+                            try {
+                                result.success("DiscoveryDone");
+
+                            }catch (Exception e){
+
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Log.println(Log.ASSERT, "P", e.toString());
+                        }
                     }
 //
                 }
@@ -335,19 +350,32 @@ public class Printer extends Service implements MethodChannel.MethodCallHandler 
                     try {
                         printer = ZebraPrinterFactory.getInstance(printerConnection);
                         startService(address);
-                        result.success(true);
+                        try {
+                            result.success(true);
+                        } catch (Exception e) {
+
+                        }
+
                     } catch (ConnectionException e) {
                         printer = null;
                         DemoSleeper.sleep(1000);
                         disconnectPrinter(null);
                         stopService();
-                        result.success(false);
+                        try {
+                            result.success(false);
+                        } catch (Exception e2) {
+
+                        }
                     } catch (ZebraPrinterLanguageUnknownException e) {
                         printer = null;
                         DemoSleeper.sleep(1000);
                         disconnectPrinter(null);
                         stopService();
-                        result.success(false);
+                        try {
+                            result.success(false);
+                        } catch (Exception e2) {
+
+                        }
 
                     }
                 }
@@ -465,20 +493,20 @@ public class Printer extends Service implements MethodChannel.MethodCallHandler 
     }
 
     public void checkPrinterStatus(final MethodChannel.Result result) {
-            tempIsPrinterConnect = true;
-            if (printerConnection != null && printerConnection.isConnected()) {
-                new Thread(new Runnable() {
-                    public void run() {
+        tempIsPrinterConnect = true;
+        if (printerConnection != null && printerConnection.isConnected()) {
+            new Thread(new Runnable() {
+                public void run() {
 
-                        try {
-                            printerConnection.open();
-                            ZebraPrinter printer = ZebraPrinterFactory.getInstance(printerConnection);
+                    try {
+                        printerConnection.open();
+                        ZebraPrinter printer = ZebraPrinterFactory.getInstance(printerConnection);
 
-                            PrinterStatus printerStatus = printer.getCurrentStatus();
+                        PrinterStatus printerStatus = printer.getCurrentStatus();
 
-                            MyPrinterStatus myPrinterStatus = new MyPrinterStatus(printerStatus.isReadyToPrint, printerStatus.isHeadOpen, printerStatus.isHeadCold, printerStatus.isHeadTooHot,printerStatus.isPaperOut,printerStatus.isRibbonOut,printerStatus.isReceiveBufferFull,printerStatus.isPaused,printerStatus.labelLengthInDots,printerStatus.numberOfFormatsInReceiveBuffer,printerStatus.labelsRemainingInBatch,printerStatus.isPartialFormatInProgress,printerStatus.printMode.ordinal());
+                        MyPrinterStatus myPrinterStatus = new MyPrinterStatus(printerStatus.isReadyToPrint, printerStatus.isHeadOpen, printerStatus.isHeadCold, printerStatus.isHeadTooHot, printerStatus.isPaperOut, printerStatus.isRibbonOut, printerStatus.isReceiveBufferFull, printerStatus.isPaused, printerStatus.labelLengthInDots, printerStatus.numberOfFormatsInReceiveBuffer, printerStatus.labelsRemainingInBatch, printerStatus.isPartialFormatInProgress, printerStatus.printMode.ordinal());
 
-                            String jsonOutput = myPrinterStatus.toJson();
+                        String jsonOutput = myPrinterStatus.toJson();
 //                            if (jsonOutput != null) {
 //                                System.out.println("JSON Output: " + jsonOutput);
 //                            } else {
@@ -486,34 +514,34 @@ public class Printer extends Service implements MethodChannel.MethodCallHandler 
 //                            }
 
 
-                            result.success(jsonOutput);
-                            if (printerStatus.isReadyToPrint) {
-                                System.out.println("Ready To Print");
-                            } else if (printerStatus.isPaused) {
-                                System.out.println("Cannot Print because the printer is paused.");
-                            } else if (printerStatus.isHeadOpen) {
-                                System.out.println("Cannot Print because the printer head is open.");
-                            } else if (printerStatus.isPaperOut) {
-                                System.out.println("Cannot Print because the paper is out.");
-                            } else {
-                                System.out.println("Cannot Print.");
-                            }
-                        } catch (ConnectionException e) {
-                            result.success("Not Connected");
-//                            e.printStackTrace();
-//                            result.error(e.toString(),e.toString(),e);
-                        } catch (ZebraPrinterLanguageUnknownException e) {
-                            result.success("Not Connected");
-//                            e.printStackTrace();
-//                            result.error(e.toString(),e.toString(),e);
-                        } finally {
+                        result.success(jsonOutput);
+                        if (printerStatus.isReadyToPrint) {
+                            System.out.println("Ready To Print");
+                        } else if (printerStatus.isPaused) {
+                            System.out.println("Cannot Print because the printer is paused.");
+                        } else if (printerStatus.isHeadOpen) {
+                            System.out.println("Cannot Print because the printer head is open.");
+                        } else if (printerStatus.isPaperOut) {
+                            System.out.println("Cannot Print because the paper is out.");
+                        } else {
+                            System.out.println("Cannot Print.");
                         }
+                    } catch (ConnectionException e) {
+                        result.success("Not Connected");
+//                            e.printStackTrace();
+//                            result.error(e.toString(),e.toString(),e);
+                    } catch (ZebraPrinterLanguageUnknownException e) {
+                        result.success("Not Connected");
+//                            e.printStackTrace();
+//                            result.error(e.toString(),e.toString(),e);
+                    } finally {
                     }
-                }).start();
-            } else {
-                result.success("Not Connected");
+                }
+            }).start();
+        } else {
+            result.success("Not Connected");
 //                result.error("Not Connected","not connected",null);
-            }
+        }
     }
 
 

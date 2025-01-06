@@ -209,7 +209,9 @@ class ZebraPrinter implements ArtemisZebraPrinterInterface {
       try{
         final status = ZebraPrinterStatus.fromJson(jsonDecode(v));
         listener?.call(status);
-        broadCastStatus(listener);
+        Future.delayed(const Duration(seconds: 5),(){
+          broadCastStatus(listener);
+        });
       }catch(e){
         Future.delayed(const Duration(seconds: 5),(){
           broadCastStatus(listener);
