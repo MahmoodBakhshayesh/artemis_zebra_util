@@ -429,14 +429,19 @@ public class Printer extends Service implements MethodChannel.MethodCallHandler 
                             if (printerConnection != null) {
                                 printerConnection.close();
                             }
+                            methodChannel.invokeMethod("connectionLost", null);
 
                         } catch (ConnectionException e) {
                             e.printStackTrace();
+                            methodChannel.invokeMethod("connectionLost", null);
+
                         } finally {
                             if (result != null) {
                                 stopService();
                                 result.success(true);
                             }
+                            methodChannel.invokeMethod("connectionLost", null);
+
                         }
                     } else {
                         socketmanager.close();
@@ -444,10 +449,14 @@ public class Printer extends Service implements MethodChannel.MethodCallHandler 
                             stopService();
                             result.success(true);
                         }
+                        methodChannel.invokeMethod("connectionLost", null);
+
                     }
                 } catch (Exception e) {
                     DemoSleeper.sleep(1000);
                     result.success(true);
+                    methodChannel.invokeMethod("connectionLost", null);
+
                 }
 
             }

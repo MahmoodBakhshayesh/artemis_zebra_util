@@ -10,6 +10,7 @@ import 'zebra_printer_interface.dart';
 class ZebraPrinter implements ArtemisZebraPrinterInterface {
   late MethodChannel channel;
   late String instanceID;
+  late Function? broadcaster;
 
   late void Function(ZebraPrinter) notifier;
 
@@ -19,6 +20,7 @@ class ZebraPrinter implements ArtemisZebraPrinterInterface {
     instanceID = label == null ? id : "$id ($label)";
     notifier = notifierFunction;
     channel.setMethodCallHandler(_printerMethodCallHandler);
+    broadcaster = statusListener;
     broadCastStatus(statusListener);
   }
 
@@ -139,6 +141,8 @@ class ZebraPrinter implements ArtemisZebraPrinterInterface {
     } else if (methodCall.method == "connectionLost") {
       status = PrinterStatus.disconnected;
       notifier(this);
+      final zStatus = ZebraPrinterStatus.disconnected();
+      broadcaster?.call(zStatus);
       log("printerDisconnected");
     }
   }

@@ -172,4 +172,21 @@ class ZebraPrinterStatus {
 
     return "Unknown";
   }
+
+
+  factory ZebraPrinterStatus.disconnected() => ZebraPrinterStatus(
+    isPaused: false,
+    numberOfFormatsInReceiveBuffer: 0,
+    isReadyToPrint: false,
+    isPaperOut: false,
+    isPartialFormatInProgress: false,
+    isReceiveBufferFull: false,
+    labelLengthInDots: 0,
+    isRibbonOut: false,
+    isHeadTooHot: false,
+    labelsRemainingInBatch: 0,
+    isHeadOpen: false,
+    isHeadCold: false,
+    printMode: 0,
+  );
 }
